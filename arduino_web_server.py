@@ -101,41 +101,31 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         """Save new page text and display it"""
         if self.path != "/":
             return SimpleHTTPServer.SimpleHTTPRequestHandler.do_POST(self)
-
+        print 'post'
         options, args = parser.parse_args()
 
         length = int(self.headers.getheader('content-length'))
         if length:
             text = self.rfile.read(length)
-                        
-            print "sketch to upload: " + text
+            arduinoFile = '#include \"Arduino.h\"\r\n'
+            arduinoFile += text
+            print arduinoFile
 
-            dirname = tempfile.mkdtemp()
-            sketchname = os.path.join(dirname, os.path.basename(dirname)) + ".ino"
-            f = open(sketchname, "wb")
-            f.write(text + "\n")
+            f = open('./src/1.ino', "w")
+            f.write(arduinoFile + "\n")
             f.close()
 
-            print "created sketch at %s" % (sketchname,)
-        
-            # invoke arduino to build/upload
-            compile_args = [
-                options.cmd or get_arduino_command(),
-                "--upload",
-                "--port",
-                options.port or guess_port_name(),
-            ]
-            if options.board:
-                compile_args.extend([
-                    "--board",
-                    options.board
-                ])
-            compile_args.append(sketchname)
-	    #os.system(compile_args[0]+' '+ compile_args[1]+ ' '+ compile_args[2]+' '+compile_args[3]+' '+compile_args[4])
-	    
-            print "Uploading with %s" % (" ".join(compile_args))
-            rc = subprocess.call(compile_args)
+            print "created file"
 
+
+
+            print "Uploading "
+	
+            
+	    print os.getcwd()
+            os.system('platformio run -e megaatmega2560 -t upload')
+	    self.send_response(200)
+	    '''
             if not rc == 0:
                 print "arduino --upload returned " + `rc`                            
                 self.send_response(400)
@@ -143,7 +133,7 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
-            
+            '''
         else:
             self.send_response(400)
            
@@ -151,6 +141,7 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     print "Blocklyduino can now be accessed at http://127.0.0.1:8080/"
+    os.chdir('./test')
     server = BaseHTTPServer.HTTPServer(("", 8080), Handler)
     server.pages = {}
     server.serve_forever()
