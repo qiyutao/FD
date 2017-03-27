@@ -105,6 +105,7 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         options, args = parser.parse_args()
 
         length = int(self.headers.getheader('content-length'))
+        os.chdir('./test')
         if length:
             text = self.rfile.read(length)
             arduinoFile = '#include \"Arduino.h\"\r\n'
@@ -123,9 +124,10 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	
             
 	    print os.getcwd()
-            os.system('platformio run -e megaatmega2560 -t upload')
-	    self.send_response(200)
-	    '''
+        os.system('platformio run -e megaatmega2560 -t upload')
+        self.send_response(200)
+        os.chdir('..')
+        '''
             if not rc == 0:
                 print "arduino --upload returned " + `rc`                            
                 self.send_response(400)
@@ -133,15 +135,12 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
-            '''
-        else:
-            self.send_response(400)
+        '''
            
-
 
 if __name__ == '__main__':
     print "Blocklyduino can now be accessed at http://127.0.0.1:8080/"
-    os.chdir('./test')
+    
     server = BaseHTTPServer.HTTPServer(("", 8080), Handler)
     server.pages = {}
     server.serve_forever()
